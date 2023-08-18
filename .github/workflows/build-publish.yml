@@ -3,6 +3,7 @@ name: homework-build-publish
   push:
     branches:
       - main
+  workflow_dispatch: {}
 jobs:
   build-publish:
     runs-on: self-hosted
