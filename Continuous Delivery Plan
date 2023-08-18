@@ -1,0 +1,40 @@
+
+Build Portion:
+
+The build portion is based on the github actions and making sure the image is getting built every single time. There are two actions:
+ - build - This gets triggered when code is pushed to any branch other than main and on raising pull request towards main. This makes sure that feature development or bug fix has not broken the image build.
+ - build-publish - This gets triggered on push to main branch which is basically in case of merging a PR as main is a protected branch. This build, tags and publishes image to your registry.
+
+build action builds the image with tag as branch name where the buld-publish builds the image with tag a SEM VERSION. This version tag is being read from VERSION file and thus can be updated to new version depending upon the major, minor or patch fix.
+
+The process can be further enhanced to have some tests against the image from application point of view in the build workflow. This removes faulty builds in main the workflow, potentially breaking the application.
+Once the image is built and pushed it can be consumed via the helm chart for the application. I have chosen to package the application using helm package manager as it provides:
+- a consistent and organized approach to managing the deployment process.
+- the ability to manage the deployment across multiple environments.
+
+The helm chart could also be brought into the CI process. The build-publish workflow could have one more additional step as below:
+    - name: Set variables
+      run: |
+       helm package homework -u
+The subsequent Helm Chart Packaged in tar file could be placed on Google bucket acting as helm repository and thus could be distributed acroos the organization acroos multiple environments. [helm-gcs plugin](https://github.com/hayorov/helm-gcs) is a great plugin to utilize your google bucket as a Helm repository.
+
+Continuous Delivery:
+
+The Continuous Delivery Plan thus becomes very easy and the application can be promoted from one env to next till production without hassle using the following approach:
+- The built image is consumed using the sem version tag inside the helm chart. You can also specify the tag during the helm install command as the tag is consumed from values file and values in values file can be overwritten during the deployment.
+- The helm chart can be packaged and placed on a google bucket acting as a helm repository.
+- A similar pipeline using the github actions can be built that will fetch the helm chart from the bucket and deploy it your targeted Kubernetes cluster using the helm client. The kubeconfig for the targeted cluster could be generated at the run time either by runnign raw commands or writing a python wrapper that authenticates and deploy to the cluster. The secrets for authentication can be stored in github action secrest and can be injected and used based on enviroments.
+- Once the application passes the functional tests in the lower environment it can be promoted to the higher environment with the help of a dedicated release team.
+
+This is just a very high level design. The actual implementation can have a Python based pipeline that does all the packaging, authentication, deployment, error capturing etc and github action acting as a wrapper around that automation.
+
+The reason for choosing the Github Actions as the CI/CD tool is:
+- Gives us the ability to build, test publish the code as soon as it is merged.
+- GitHub Actions integrates seamlessly with other GitHub features, such as pull requests and issues
+- Simplifies the pipeline by segregating the flows based on different sort of events.
+- Github runners are easy to setup. Can be even setup on your laptop for local environment testing.
+- GitHub Actions are highly customizable. Which means you can your own code for multiple cloud providers, even on prem.
+- GitHub Actions has a large and active community. Thus you can find pre-built actions.
+- Cost effective.
+
+Combine Github Actions with your customised python scripts, now you have a pipeline that can be used to deploy and build both infrastructure and applications consistently across multiple environments.

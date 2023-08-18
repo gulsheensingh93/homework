@@ -1,0 +1,31 @@
+name: homework-build-publish
+'on':
+  push:
+    branches:
+      - main
+jobs:
+  build-publish:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set variables
+        run: |
+          VER=$(cat VERSION)
+          echo "VERSION=$VER" >> $GITHUB_ENV
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: gulsheensingh93/homework
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.VERSION }}
+      - name: Build & Publish
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          no-cache: true
