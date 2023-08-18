@@ -1,7 +1,7 @@
 ## Prerequisite:
 - Helm Client.
 - Kubeconfig generated for the cluster you want to deploy to (I am using single node kubernetes cluster available via docker desktop).
-- This repo cloned locally.
+- This [repo](https://github.com/gulsheensingh93/homework) cloned locally. 
 
 The repository already comes setup with github runners for running your workflows.
 
